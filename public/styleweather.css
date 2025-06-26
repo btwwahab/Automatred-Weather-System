@@ -1444,3 +1444,7 @@ body {
 .light-theme .footer-text {
     color: #64748b;
 }
+
+.badge {
+    font-size: 12px;
+}
