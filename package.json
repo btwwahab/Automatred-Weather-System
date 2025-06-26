@@ -1,0 +1,17 @@
+{
+  "name": "neural-weather-app",
+  "version": "1.0.0",
+  "description": "AI-Powered Weather Analysis App",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod",
+    "build": "echo 'No build step required'"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  }
+}

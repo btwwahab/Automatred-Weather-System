@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="images/favi.png" type="image/png">
+    <title>Neural Weather Intelligence</title>
+    <link rel="stylesheet" href="styleweather.css">
+</head>
+<body>
+    <div class="neural-network" id="neuralNetwork"></div>
+    <div class="grid-overlay"></div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="ai-status">
+                <div class="ai-indicator"></div>
+                <span>Neural Engine Online</span>
+            </div>
+            <div class="logo">🧠 NEURAL WEATHER</div>
+            <div class="subtitle">Advanced AI-Powered Atmospheric Intelligence System</div>
+        </div>
+
+        <div class="main-interface">
+            <div class="search-interface">
+                <div class="search-container">
+                    <input type="text" class="search-input" id="cityInput" placeholder="Enter location coordinates or city name...">
+                </div>
+                <button class="search-btn" id="searchBtn">Search</button>
+            </div>
+
+            <div id="weatherContent" class="hidden">
+                <div class="weather-grid">
+                    <div class="weather-primary">
+                        <div class="weather-icon-container">
+                            <div class="weather-icon-glow"></div>
+                            <div class="weather-icon" id="weatherIcon">🌤️</div>
+                        </div>
+                        <div class="temperature-display" id="temperature">--°</div>
+                        <div class="location-name" id="cityName">LOCATION</div>
+                        <div class="weather-desc" id="weatherDescription">Atmospheric Conditions</div>
+                    </div>
+                    
+                    <div class="weather-metrics">
+                        <div class="metric-card">
+                            <div class="metric-icon">💧</div>
+                            <div class="metric-value" id="humidity">--%</div>
+                            <div class="metric-label">HUMIDITY</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">💨</div>
+                            <div class="metric-value" id="windSpeed">-- KM/H</div>
+                            <div class="metric-label">WIND VELOCITY</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">👁️</div>
+                            <div class="metric-value" id="visibility">-- KM</div>
+                            <div class="metric-label">VISIBILITY</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">🌡️</div>
+                            <div class="metric-value" id="feelsLike">--°</div>
+                            <div class="metric-label">PERCEIVED TEMP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ai-panel" id="aiPanel">
+            <div class="ai-header">
+                <div class="ai-brain-icon">🧠</div>
+                <div class="ai-title">NEURAL ANALYSIS PROTOCOL</div>
+            </div>
+            <div class="ai-content" id="aiContent">
+                🧠 Initiate atmospheric scan to activate AI analysis protocol...
+            </div>
+        </div>
+    </div>
+
+<script src="test.js"></script>
+</body>
+</html>
+
