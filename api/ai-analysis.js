@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Weather data is required' });
     }
 
-    const weatherPrompt = `You are ARIA (Atmospheric Research Intelligence Assistant), an advanced AI weather analyst. Analyze this atmospheric data with the precision of a next-generation weather intelligence system:
+const weatherPrompt = `You are ARIA (Atmospheric Research Intelligence Assistant), an advanced AI weather analyst. Analyze this atmospheric data with the precision of a next-generation weather intelligence system:
 
 ATMOSPHERIC SCAN RESULTS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -39,12 +39,18 @@ ATMOSPHERIC SCAN RESULTS:
 🏔️ ATMOSPHERIC PRESSURE: ${weatherData.main.pressure} hPa
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Provide a sophisticated atmospheric analysis in exactly 2-3 sentences that sounds like it's from an advanced AI weather system. Focus on:
-- Current atmospheric conditions and their implications
-- Weather patterns and micro-climate effects
-- Actionable insights for human activity optimization
+Your response should have two distinct parts separated by "===RECOMMENDATIONS===":
 
-Format your response like an AI system report with technical precision but human readability. Start with your analysis directly without "NEURAL ANALYSIS:" prefix. Use scientific terminology appropriately.`;
+PART 1: Provide a sophisticated atmospheric analysis in exactly 2-3 sentences that sounds like it's from an advanced AI weather system. Focus on current atmospheric conditions and their implications.
+
+PART 2: List exactly 3 personalized recommendations based on these weather conditions. Each recommendation must start with a single emoji (such as 🧥, 🏃‍♂️, ☂️, etc.) followed by a space and then provide specific actionable advice for clothing, activities, or health precautions based on the weather.
+
+Format each recommendation on a separate line. For example:
+🧥 Recommendation text here
+🌂 Another recommendation here
+🏖️ Third recommendation here
+
+Format your response like an AI system report with technical precision but human readability. Use scientific terminology appropriately.`;
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',

@@ -211,15 +211,14 @@ class WeatherIntelligence {
             const forecastResponse = await fetch(forecastUrl);
             const forecastData = forecastResponse.ok ? await forecastResponse.json() : null;
             
-            // Display data
-            this.displayWeather(currentData);
-            if (forecastData) this.displayForecast(forecastData);
-            
-            // Get AI insights and weather recommendations
-            setTimeout(() => {
-                this.getAIInsights();
-                this.generateRecommendations();
-            }, 1000);
+// Display data
+this.displayWeather(currentData);
+if (forecastData) this.displayForecast(forecastData);
+
+// Get AI insights (which now includes recommendations)
+setTimeout(() => {
+    this.getAIInsights();
+}, 1000);
 
         } catch (error) {
             this.showError('❌ SCAN FAILED: ' + error.message);
@@ -611,26 +610,75 @@ class WeatherIntelligence {
         element.classList.add('typing-effect');
     }
 
-    async getAIInsights() {
-        if (!this.currentWeatherData) return;
+async getAIInsights() {
+    if (!this.currentWeatherData) return;
 
-        try {
-            this.showAILoading();
-            const response = await fetch('/api/ai-analysis', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ weatherData: this.currentWeatherData }),
-            });
+    try {
+        this.showAILoading();
+        const response = await fetch('/api/ai-analysis', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ weatherData: this.currentWeatherData }),
+        });
 
-            if (!response.ok) throw new Error('Neural network analysis failed');
+        if (!response.ok) throw new Error('Neural network analysis failed');
 
-            const result = await response.json();
-            this.displayFormattedAIResponse(result.analysis);
-        } catch (error) {
-            console.error('AI Analysis error:', error);
-            this.displayAIError();
+        const result = await response.json();
+        
+        // Parse the analysis and recommendations
+        const parts = result.analysis.split('===RECOMMENDATIONS===');
+        const analysis = parts[0].trim();
+        let recommendations = [];
+        
+        if (parts.length > 1) {
+            // Extract recommendations from the second part
+            recommendations = parts[1].trim()
+                .split('\n')
+                .filter(line => line.trim().length > 0)
+                .map(line => line.trim());
         }
+        
+        // Display both
+        this.displayFormattedAIResponse(analysis);
+        this.displayRecommendations(recommendations);
+    } catch (error) {
+        console.error('AI Analysis error:', error);
+        this.displayAIError();
+        // Fall back to rule-based recommendations
+        this.generateRuleBasedRecommendations();
     }
+}
+
+// Add a fallback method for rule-based recommendations
+generateRuleBasedRecommendations() {
+    if (!this.currentWeatherData) return;
+
+    const { main: { temp, humidity }, weather: [{ description }], wind: { speed } } = this.currentWeatherData;
+    const recommendations = [];
+
+    // Activity suggestions based on weather
+    if (temp > 25 && humidity < 60) {
+        recommendations.push('🏃‍♂️ Perfect conditions for outdoor sports and activities');
+    } else if (temp < 10) {
+        recommendations.push('🧥 Layer up! Indoor activities recommended');
+    } else if (description.includes('rain')) {
+        recommendations.push('☔ Great day for indoor activities, museums, or cozy cafes');
+    }
+
+    // Clothing suggestions
+    if (temp > 30) {
+        recommendations.push('👕 Light, breathable clothing recommended');
+    } else if (temp < 5) {
+        recommendations.push('🧥 Heavy winter clothing essential');
+    }
+
+    // Health recommendations
+    if (humidity > 80) {
+        recommendations.push('💧 High humidity - stay hydrated and seek air conditioning');
+    }
+
+    this.displayRecommendations(recommendations);
+}
 
     displayFormattedAIResponse(analysis) {
         const cleanedAnalysis = analysis
