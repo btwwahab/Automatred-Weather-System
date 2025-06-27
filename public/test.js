@@ -532,6 +532,7 @@ async getCurrentLocation() {
 
         const position = await this.getCurrentPosition();
         const { latitude, longitude } = position.coords;
+        let detectedLocationName = null;
 
         // Use reverse geocoding to get more accurate location name
         try {
@@ -541,9 +542,9 @@ async getCurrentLocation() {
             if (geocodeResponse.ok) {
                 const geocodeData = await geocodeResponse.json();
                 if (geocodeData && geocodeData.length > 0) {
-                    // Update the city input with the detected location name
-                    const locationName = geocodeData[0].name;
-                    this.elements.cityInput.value = locationName;
+                    // Save the detected location name
+                    detectedLocationName = geocodeData[0].name;
+                    this.elements.cityInput.value = detectedLocationName;
                 }
             }
         } catch (geocodeError) {
@@ -551,8 +552,8 @@ async getCurrentLocation() {
             // Continue with coordinates if geocoding fails
         }
 
-        // Fetch weather data using coordinates
-        await this.fetchWeatherData(null, { lat: latitude, lon: longitude });
+        // Fetch weather data using coordinates AND passing the detected location name
+        await this.fetchWeatherData(detectedLocationName, { lat: latitude, lon: longitude });
     } catch (error) {
         console.error('Geolocation error:', error);
         this.showError('❌ LOCATION ACCESS DENIED: Please enable location services or enter a city manually');
