@@ -513,40 +513,40 @@ async fetchWeatherData(city, coordinates = null) {
         document.getElementById('modalBackdrop').classList.add('hidden');
     }
 
-    async getCurrentLocation() {
+async getCurrentLocation() {
+    try {
+        // Show loading state
+        this.showWeatherLoading();
+        this.elements.cityInput.value = "Detecting your location...";
+
+        const position = await this.getCurrentPosition();
+        const { latitude, longitude } = position.coords;
+
+        // Use reverse geocoding to get more accurate location name
         try {
-            // Show loading state
-            this.showWeatherLoading();
-            this.elements.cityInput.value = "Detecting your location...";
+            const geocodeUrl = `/api/weather?lat=${latitude}&lon=${longitude}&type=geocode`;
+            const geocodeResponse = await fetch(geocodeUrl);
 
-            const position = await this.getCurrentPosition();
-            const { latitude, longitude } = position.coords;
-
-            // Use reverse geocoding to get more accurate location name
-            try {
-                const geocodeUrl = `https://api.openweathermap.org/geo/1.0/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=${process.env.WEATHER_API_KEY}`;
-                const geocodeResponse = await fetch(geocodeUrl);
-
-                if (geocodeResponse.ok) {
-                    const geocodeData = await geocodeResponse.json();
-                    if (geocodeData && geocodeData.length > 0) {
-                        // Update the city input with the detected location name
-                        const locationName = geocodeData[0].name;
-                        this.elements.cityInput.value = locationName;
-                    }
+            if (geocodeResponse.ok) {
+                const geocodeData = await geocodeResponse.json();
+                if (geocodeData && geocodeData.length > 0) {
+                    // Update the city input with the detected location name
+                    const locationName = geocodeData[0].name;
+                    this.elements.cityInput.value = locationName;
                 }
-            } catch (geocodeError) {
-                console.error('Reverse geocoding error:', geocodeError);
-                // Continue with coordinates if geocoding fails
             }
-
-            // Fetch weather data using coordinates
-            await this.fetchWeatherData(null, { lat: latitude, lon: longitude });
-        } catch (error) {
-            console.error('Geolocation error:', error);
-            this.showError('❌ LOCATION ACCESS DENIED: Please enable location services or enter a city manually');
+        } catch (geocodeError) {
+            console.error('Reverse geocoding error:', geocodeError);
+            // Continue with coordinates if geocoding fails
         }
+
+        // Fetch weather data using coordinates
+        await this.fetchWeatherData(null, { lat: latitude, lon: longitude });
+    } catch (error) {
+        console.error('Geolocation error:', error);
+        this.showError('❌ LOCATION ACCESS DENIED: Please enable location services or enter a city manually');
     }
+}
 
     toggleFavorites() {
         const panel = document.getElementById('favoritesPanel');

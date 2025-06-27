@@ -23,6 +23,8 @@ module.exports = async (req, res) => {
   }
 
   try {
+  const apiKey = process.env.WEATHER_API_KEY;
+  
   // Add support for reverse geocoding
   if (type === 'geocode' && lat && lon) {
     const geocodeUrl = `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${apiKey}`;
@@ -37,7 +39,6 @@ module.exports = async (req, res) => {
   }
 
   let url;
-  const apiKey = process.env.WEATHER_API_KEY;
 
     switch (type) {
       case 'forecast':
