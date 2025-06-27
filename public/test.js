@@ -42,7 +42,7 @@ class WeatherIntelligence {
     // Add new UI elements for enhanced features
     addNewUIElements() {
         const container = document.querySelector('.container');
-        
+
         // Add forecast panel
         const forecastPanel = document.createElement('div');
         forecastPanel.className = 'forecast-panel';
@@ -139,11 +139,11 @@ class WeatherIntelligence {
             container.appendChild(forecastPanel);
             container.appendChild(favoritesPanel);
         }
-        
+
         // Add modal backdrop and preferences to body
         document.body.appendChild(modalBackdrop);
         document.body.appendChild(preferencesPanel);
-        
+
         const searchInterface = document.querySelector('.search-interface');
         if (searchInterface) {
             searchInterface.appendChild(controlsBar);
@@ -188,37 +188,39 @@ class WeatherIntelligence {
     }
 
     // Enhanced weather data fetching
-    async fetchWeatherData(city, coordinates = null) {
-        try {
-            this.showWeatherLoading();
-            
-            // Fetch current weather
-            const currentUrl = coordinates 
-                ? `/api/weather?lat=${coordinates.lat}&lon=${coordinates.lon}`
-                : `/api/weather?city=${encodeURIComponent(city)}`;
-            
-            const currentResponse = await fetch(currentUrl);
-            if (!currentResponse.ok) throw new Error('Location not found');
-            
-            const currentData = await currentResponse.json();
-            this.currentWeatherData = currentData;
-            
+async fetchWeatherData(city, coordinates = null) {
+    try {
+        this.showWeatherLoading();
+        
+        // Fetch current weather
+        const currentUrl = coordinates 
+            ? `/api/weather?lat=${coordinates.lat}&lon=${coordinates.lon}`
+            : `/api/weather?city=${encodeURIComponent(city)}`;
+        
+        console.log('Fetching weather from URL:', currentUrl);
+        const currentResponse = await fetch(currentUrl);
+        if (!currentResponse.ok) throw new Error('Location not found');
+        
+        const currentData = await currentResponse.json();
+        console.log('Weather API response:', currentData);
+        this.currentWeatherData = currentData;
+
             // Fetch forecast
-            const forecastUrl = coordinates 
+            const forecastUrl = coordinates
                 ? `/api/weather?lat=${coordinates.lat}&lon=${coordinates.lon}&type=forecast`
                 : `/api/weather?city=${encodeURIComponent(city)}&type=forecast`;
-            
+
             const forecastResponse = await fetch(forecastUrl);
             const forecastData = forecastResponse.ok ? await forecastResponse.json() : null;
-            
-// Display data
-this.displayWeather(currentData);
-if (forecastData) this.displayForecast(forecastData);
 
-// Get AI insights (which now includes recommendations)
-setTimeout(() => {
-    this.getAIInsights();
-}, 1000);
+            // Display data
+            this.displayWeather(currentData);
+            if (forecastData) this.displayForecast(forecastData);
+
+            // Get AI insights (which now includes recommendations)
+            setTimeout(() => {
+                this.getAIInsights();
+            }, 1000);
 
         } catch (error) {
             this.showError('❌ SCAN FAILED: ' + error.message);
@@ -230,7 +232,7 @@ setTimeout(() => {
     displayForecast(forecastData) {
         const forecastContent = document.getElementById('forecastContent');
         const dailyForecasts = this.processForecastData(forecastData);
-        
+
         forecastContent.innerHTML = `
             <div class="forecast-grid">
                 ${dailyForecasts.map(day => `
@@ -255,11 +257,11 @@ setTimeout(() => {
     // Process forecast data into daily summaries
     processForecastData(forecastData) {
         const dailyData = {};
-        
+
         forecastData.list.forEach(item => {
             const date = new Date(item.dt * 1000);
             const dayKey = date.toDateString();
-            
+
             if (!dailyData[dayKey]) {
                 dailyData[dayKey] = {
                     date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
@@ -270,7 +272,7 @@ setTimeout(() => {
                     icons: []
                 };
             }
-            
+
             dailyData[dayKey].temps.push(item.main.temp);
             dailyData[dayKey].humidity.push(item.main.humidity);
             dailyData[dayKey].windSpeed.push(item.wind.speed * 3.6);
@@ -395,7 +397,7 @@ setTimeout(() => {
 
     updateFavoritesDisplay() {
         const favoritesContent = document.getElementById('favoritesContent');
-        
+
         if (this.favorites.length === 0) {
             favoritesContent.innerHTML = '<div class="empty-favorites">📍 No favorite locations saved</div>';
             return;
@@ -447,7 +449,7 @@ setTimeout(() => {
     applyPreferences() {
         // Apply theme
         document.body.className = this.preferences.theme === 'light' ? 'light-theme' : '';
-        
+
         // Apply temperature unit
         if (this.currentWeatherData) {
             this.displayWeather(this.currentWeatherData);
@@ -475,7 +477,7 @@ setTimeout(() => {
     convertTemperature(temp) {
         switch (this.preferences.temperatureUnit) {
             case 'fahrenheit':
-                return (temp * 9/5) + 32;
+                return (temp * 9 / 5) + 32;
             case 'kelvin':
                 return temp + 273.15;
             default:
@@ -495,10 +497,10 @@ setTimeout(() => {
     openPreferences() {
         const panel = document.getElementById('preferencesPanel');
         const backdrop = document.getElementById('modalBackdrop');
-        
+
         panel.classList.remove('hidden');
         backdrop.classList.remove('hidden');
-        
+
         // Update form values
         document.getElementById('temperatureUnit').value = this.preferences.temperatureUnit;
         document.getElementById('themeSelect').value = this.preferences.theme;
@@ -513,11 +515,36 @@ setTimeout(() => {
 
     async getCurrentLocation() {
         try {
+            // Show loading state
+            this.showWeatherLoading();
+            this.elements.cityInput.value = "Detecting your location...";
+
             const position = await this.getCurrentPosition();
             const { latitude, longitude } = position.coords;
+
+            // Use reverse geocoding to get more accurate location name
+            try {
+                const geocodeUrl = `https://api.openweathermap.org/geo/1.0/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=${process.env.WEATHER_API_KEY}`;
+                const geocodeResponse = await fetch(geocodeUrl);
+
+                if (geocodeResponse.ok) {
+                    const geocodeData = await geocodeResponse.json();
+                    if (geocodeData && geocodeData.length > 0) {
+                        // Update the city input with the detected location name
+                        const locationName = geocodeData[0].name;
+                        this.elements.cityInput.value = locationName;
+                    }
+                }
+            } catch (geocodeError) {
+                console.error('Reverse geocoding error:', geocodeError);
+                // Continue with coordinates if geocoding fails
+            }
+
+            // Fetch weather data using coordinates
             await this.fetchWeatherData(null, { lat: latitude, lon: longitude });
         } catch (error) {
-            alert('Could not get your location. Please check location permissions.');
+            console.error('Geolocation error:', error);
+            this.showError('❌ LOCATION ACCESS DENIED: Please enable location services or enter a city manually');
         }
     }
 
@@ -596,7 +623,7 @@ setTimeout(() => {
     animateValue(elementId, finalValue) {
         const element = document.getElementById(elementId);
         if (!element) return;
-        
+
         element.textContent = '';
         let index = 0;
         const interval = setInterval(() => {
@@ -610,75 +637,75 @@ setTimeout(() => {
         element.classList.add('typing-effect');
     }
 
-async getAIInsights() {
-    if (!this.currentWeatherData) return;
+    async getAIInsights() {
+        if (!this.currentWeatherData) return;
 
-    try {
-        this.showAILoading();
-        const response = await fetch('/api/ai-analysis', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ weatherData: this.currentWeatherData }),
-        });
+        try {
+            this.showAILoading();
+            const response = await fetch('/api/ai-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ weatherData: this.currentWeatherData }),
+            });
 
-        if (!response.ok) throw new Error('Neural network analysis failed');
+            if (!response.ok) throw new Error('Neural network analysis failed');
 
-        const result = await response.json();
-        
-        // Parse the analysis and recommendations
-        const parts = result.analysis.split('===RECOMMENDATIONS===');
-        const analysis = parts[0].trim();
-        let recommendations = [];
-        
-        if (parts.length > 1) {
-            // Extract recommendations from the second part
-            recommendations = parts[1].trim()
-                .split('\n')
-                .filter(line => line.trim().length > 0)
-                .map(line => line.trim());
+            const result = await response.json();
+
+            // Parse the analysis and recommendations
+            const parts = result.analysis.split('===RECOMMENDATIONS===');
+            const analysis = parts[0].trim();
+            let recommendations = [];
+
+            if (parts.length > 1) {
+                // Extract recommendations from the second part
+                recommendations = parts[1].trim()
+                    .split('\n')
+                    .filter(line => line.trim().length > 0)
+                    .map(line => line.trim());
+            }
+
+            // Display both
+            this.displayFormattedAIResponse(analysis);
+            this.displayRecommendations(recommendations);
+        } catch (error) {
+            console.error('AI Analysis error:', error);
+            this.displayAIError();
+            // Fall back to rule-based recommendations
+            this.generateRuleBasedRecommendations();
         }
-        
-        // Display both
-        this.displayFormattedAIResponse(analysis);
+    }
+
+    // Add a fallback method for rule-based recommendations
+    generateRuleBasedRecommendations() {
+        if (!this.currentWeatherData) return;
+
+        const { main: { temp, humidity }, weather: [{ description }], wind: { speed } } = this.currentWeatherData;
+        const recommendations = [];
+
+        // Activity suggestions based on weather
+        if (temp > 25 && humidity < 60) {
+            recommendations.push('🏃‍♂️ Perfect conditions for outdoor sports and activities');
+        } else if (temp < 10) {
+            recommendations.push('🧥 Layer up! Indoor activities recommended');
+        } else if (description.includes('rain')) {
+            recommendations.push('☔ Great day for indoor activities, museums, or cozy cafes');
+        }
+
+        // Clothing suggestions
+        if (temp > 30) {
+            recommendations.push('👕 Light, breathable clothing recommended');
+        } else if (temp < 5) {
+            recommendations.push('🧥 Heavy winter clothing essential');
+        }
+
+        // Health recommendations
+        if (humidity > 80) {
+            recommendations.push('💧 High humidity - stay hydrated and seek air conditioning');
+        }
+
         this.displayRecommendations(recommendations);
-    } catch (error) {
-        console.error('AI Analysis error:', error);
-        this.displayAIError();
-        // Fall back to rule-based recommendations
-        this.generateRuleBasedRecommendations();
     }
-}
-
-// Add a fallback method for rule-based recommendations
-generateRuleBasedRecommendations() {
-    if (!this.currentWeatherData) return;
-
-    const { main: { temp, humidity }, weather: [{ description }], wind: { speed } } = this.currentWeatherData;
-    const recommendations = [];
-
-    // Activity suggestions based on weather
-    if (temp > 25 && humidity < 60) {
-        recommendations.push('🏃‍♂️ Perfect conditions for outdoor sports and activities');
-    } else if (temp < 10) {
-        recommendations.push('🧥 Layer up! Indoor activities recommended');
-    } else if (description.includes('rain')) {
-        recommendations.push('☔ Great day for indoor activities, museums, or cozy cafes');
-    }
-
-    // Clothing suggestions
-    if (temp > 30) {
-        recommendations.push('👕 Light, breathable clothing recommended');
-    } else if (temp < 5) {
-        recommendations.push('🧥 Heavy winter clothing essential');
-    }
-
-    // Health recommendations
-    if (humidity > 80) {
-        recommendations.push('💧 High humidity - stay hydrated and seek air conditioning');
-    }
-
-    this.displayRecommendations(recommendations);
-}
 
     displayFormattedAIResponse(analysis) {
         const cleanedAnalysis = analysis
@@ -686,7 +713,7 @@ generateRuleBasedRecommendations() {
             .replace(/\*(.*?)\*/g, '$1')
             .replace(/━+/g, '')
             .trim();
-        
+
         this.elements.aiContent.innerHTML = `
             <div class="ai-response">
                 <div class="ai-response-header">
@@ -704,7 +731,7 @@ generateRuleBasedRecommendations() {
                 </div>
             </div>
         `;
-        
+
         const analysisElement = document.getElementById('aiAnalysisText');
         this.typewriterEffect(analysisElement, cleanedAnalysis);
     }
