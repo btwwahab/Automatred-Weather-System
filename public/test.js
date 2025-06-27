@@ -192,6 +192,8 @@ async fetchWeatherData(city, coordinates = null) {
     try {
         this.showWeatherLoading();
         
+        const originalLocationName = city; // Store the original search term
+        
         // Fetch current weather
         const currentUrl = coordinates 
             ? `/api/weather?lat=${coordinates.lat}&lon=${coordinates.lon}`
@@ -203,6 +205,15 @@ async fetchWeatherData(city, coordinates = null) {
         
         const currentData = await currentResponse.json();
         console.log('Weather API response:', currentData);
+        
+        // If we have a city name from the search, use that instead
+        if (originalLocationName) {
+            currentData.displayName = originalLocationName.toUpperCase();
+        } else if (coordinates) {
+            // If using coordinates, use the name from the API
+            currentData.displayName = currentData.name.toUpperCase();
+        }
+        
         this.currentWeatherData = currentData;
 
             // Fetch forecast
@@ -607,7 +618,8 @@ async getCurrentLocation() {
         const convertedTemp = this.convertTemperature(temp);
         const convertedFeelsLike = this.convertTemperature(feels_like);
 
-        this.animateValue('cityName', name.toUpperCase());
+            const displayName = data.displayName || data.name.toUpperCase();
+    this.animateValue('cityName', displayName);
         this.animateValue('temperature', Math.round(convertedTemp) + tempUnit);
         this.animateValue('weatherDescription', description);
 
